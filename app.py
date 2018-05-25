@@ -50,4 +50,4 @@ def create_db():
 
 @app.route("/")
 def hello():
-    return "Hello World! version jenkins"
+    return "Hello World! continues integration with docker demo"
