@@ -1,0 +1,84 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.29.0">
+      <projectUrl>https://github.com/bao-work/docker/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.28">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <org.jenkinsci.plugins.github.pullrequest.GitHubPRTrigger plugin="github-pullrequest@0.1.0-rc29">
+      <spec></spec>
+      <triggerMode>HEAVY_HOOKS</triggerMode>
+      <cancelQueued>false</cancelQueued>
+      <abortRunning>false</abortRunning>
+      <skipFirstRun>false</skipFirstRun>
+      <repoProviders>
+        <com.github.kostyasha.github.integration.generic.repoprovider.GitHubPluginRepoProvider>
+          <cacheConnection>true</cacheConnection>
+          <manageHooks>true</manageHooks>
+          <repoPermission>ADMIN</repoPermission>
+        </com.github.kostyasha.github.integration.generic.repoprovider.GitHubPluginRepoProvider>
+      </repoProviders>
+      <errorsAction>
+        <description>GitHub Pull Requests Trigger Errors</description>
+        <errors class="java.util.Collections$SynchronizedSet" serialization="custom">
+          <java.util.Collections_-SynchronizedCollection>
+            <default>
+              <c class="set"/>
+              <mutex class="java.util.Collections$SynchronizedSet" reference="../../.."/>
+            </default>
+          </java.util.Collections_-SynchronizedCollection>
+        </errors>
+      </errorsAction>
+      <events>
+        <org.jenkinsci.plugins.github.pullrequest.events.impl.GitHubPRCloseEvent/>
+      </events>
+      <preStatus>false</preStatus>
+    </org.jenkinsci.plugins.github.pullrequest.GitHubPRTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+set -ex
+
+#cleanup
+bind=$(sudo docker port &quot;flask_pr_${GITHUB_PR_NUMBER}&quot; 5000) || true
+port=${bind:8} || true
+echo y | sudo ufw delete allow ${port} || true
+sudo docker stop &quot;flask_pr_${GITHUB_PR_NUMBER}&quot; || true 
+sudo docker rm &quot;flask_pr_${GITHUB_PR_NUMBER}&quot; || true
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <org.jenkinsci.plugins.github.pullrequest.publishers.impl.GitHubPRCommentPublisher plugin="github-pullrequest@0.1.0-rc29">
+      <comment>
+        <content>Pull Request Close Build  ${BUILD_NUMBER} ${BUILD_STATUS}
+${BUILD_URL}console
+</content>
+      </comment>
+    </org.jenkinsci.plugins.github.pullrequest.publishers.impl.GitHubPRCommentPublisher>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.34">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter></cleanupParameter>
+      <externalDelete></externalDelete>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.8.10"/>
+  </buildWrappers>
+</project>
